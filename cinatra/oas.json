@@ -1,0 +1,113 @@
+{
+  "agentspec_version": "26.1.0",
+  "component_type": "Flow",
+  "id": "agent-lint-policy-flow",
+  "name": "Agent Lint Policy",
+  "description": "Deterministic OAS lint policy agent. Runs Cinatra's platform-invariant scanners (literal secrets, untrusted URLs, llm-bridge wiring, llm metadata drift, StartNode required-or-hidden, package version sync, required license) against an OAS Flow body and returns a normalized ReviewFinding[]. The ONLY agent authorized to emit `severity: 'blocker'` — all hard-gating blockers in Cinatra flow from here. Dispatched synchronously via A2A by `agent_source_lint`, `agent_source_publish`, and `agent_source_compile`. See docs/developer/chat-agent-authoring-review.md.",
+  "metadata": {
+    "cinatra": {
+      "type": "node",
+      "packageName": "@cinatra-ai/lint-policy-agent",
+      "packageVersion": "0.1.3"
+    }
+  },
+  "inputs": [
+    { "title": "agent_run_id", "type": "string", "default": "" },
+    { "title": "oasJson", "type": "string" },
+    { "title": "packageJson", "type": "string", "default": "" },
+    { "title": "packageSlug", "type": "string", "default": "" },
+    { "title": "policyVersion", "type": "string", "default": "v1" }
+  ],
+  "outputs": [
+    { "title": "findings", "type": "string" }
+  ],
+  "start_node": { "$component_ref": "start" },
+  "nodes": [
+    { "$component_ref": "start" },
+    { "$component_ref": "scan_all" },
+    { "$component_ref": "emit_output" },
+    { "$component_ref": "end" }
+  ],
+  "control_flow_connections": [
+    { "component_type": "ControlFlowEdge", "name": "start_to_scan", "from_node": { "$component_ref": "start" }, "to_node": { "$component_ref": "scan_all" } },
+    { "component_type": "ControlFlowEdge", "name": "scan_to_emit", "from_node": { "$component_ref": "scan_all" }, "to_node": { "$component_ref": "emit_output" } },
+    { "component_type": "ControlFlowEdge", "name": "emit_to_end", "from_node": { "$component_ref": "emit_output" }, "to_node": { "$component_ref": "end" } }
+  ],
+  "data_flow_connections": [
+    { "component_type": "DataFlowEdge", "name": "agent_run_id_to_scan", "source_node": { "$component_ref": "start" }, "source_output": "agent_run_id", "destination_node": { "$component_ref": "scan_all" }, "destination_input": "agent_run_id" },
+    { "component_type": "DataFlowEdge", "name": "oasJson_to_scan", "source_node": { "$component_ref": "start" }, "source_output": "oasJson", "destination_node": { "$component_ref": "scan_all" }, "destination_input": "oasJson" },
+    { "component_type": "DataFlowEdge", "name": "packageJson_to_scan", "source_node": { "$component_ref": "start" }, "source_output": "packageJson", "destination_node": { "$component_ref": "scan_all" }, "destination_input": "packageJson" },
+    { "component_type": "DataFlowEdge", "name": "packageSlug_to_scan", "source_node": { "$component_ref": "start" }, "source_output": "packageSlug", "destination_node": { "$component_ref": "scan_all" }, "destination_input": "packageSlug" },
+    { "component_type": "DataFlowEdge", "name": "policyVersion_to_scan", "source_node": { "$component_ref": "start" }, "source_output": "policyVersion", "destination_node": { "$component_ref": "scan_all" }, "destination_input": "policyVersion" },
+    { "component_type": "DataFlowEdge", "name": "findings_to_emit", "source_node": { "$component_ref": "scan_all" }, "source_output": "findings", "destination_node": { "$component_ref": "emit_output" }, "destination_input": "findings" },
+    { "component_type": "DataFlowEdge", "name": "findings_to_end", "source_node": { "$component_ref": "scan_all" }, "source_output": "findings", "destination_node": { "$component_ref": "end" }, "destination_input": "findings" }
+  ],
+  "$referenced_components": {
+    "start": {
+      "component_type": "StartNode",
+      "id": "start",
+      "name": "Inputs",
+      "metadata": {
+        "cinatra": {
+          "required": ["oasJson"],
+          "hidden": ["agent_run_id", "packageJson", "packageSlug", "policyVersion"]
+        }
+      },
+      "inputs": [
+        { "title": "agent_run_id", "type": "string", "default": "" },
+        { "title": "oasJson", "type": "string" },
+        { "title": "packageJson", "type": "string", "default": "" },
+        { "title": "packageSlug", "type": "string", "default": "" },
+        { "title": "policyVersion", "type": "string", "default": "v1" }
+      ]
+    },
+    "scan_all": {
+      "component_type": "ApiNode",
+      "id": "scan_all",
+      "name": "Run all deterministic lint scanners",
+      "url": "{{CINATRA_BASE_URL}}/api/oas-lint/scan-all",
+      "http_method": "POST",
+      "data": {
+        "oasJson": "{{ oasJson }}",
+        "packageJson": "{{ packageJson }}",
+        "packageSlug": "{{ packageSlug }}",
+        "policyVersion": "{{ policyVersion }}",
+        "agent_id": "lint-policy-agent",
+        "agent_run_id": "{{ agent_run_id }}"
+      },
+      "inputs": [
+        { "title": "agent_run_id", "type": "string", "default": "" },
+        { "title": "oasJson", "type": "string" },
+        { "title": "packageJson", "type": "string", "default": "" },
+        { "title": "packageSlug", "type": "string", "default": "" },
+        { "title": "policyVersion", "type": "string", "default": "v1" }
+      ],
+      "outputs": [
+        { "title": "findings", "type": "string" }
+      ],
+      "metadata": {
+        "cinatra": {
+          "riskClass": "read_only",
+          "requiresApproval": false
+        }
+      }
+    },
+    "emit_output": {
+      "component_type": "OutputMessageNode",
+      "id": "emit_output",
+      "name": "Emit findings JSON as agent message",
+      "inputs": [
+        { "title": "findings", "type": "string" }
+      ],
+      "message": "{\"findings\":{{ findings }}}"
+    },
+    "end": {
+      "component_type": "EndNode",
+      "id": "end",
+      "name": "End",
+      "outputs": [
+        { "title": "findings", "type": "string" }
+      ]
+    }
+  }
+}

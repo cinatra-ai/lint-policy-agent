@@ -1,0 +1,12 @@
+{
+  "name": "@cinatra-ai/lint-policy-agent",
+  "version": "0.1.3",
+  "license": "Apache-2.0",
+  "description": "Deterministic OAS lint policy agent — runs the platform's policy scanners (literal secrets, untrusted URLs, llm-bridge wiring, llm metadata, StartNode required, package version sync, license) and returns a normalized ReviewFinding[]. The only agent allowed to emit `severity: \"blocker\"`. Dispatched synchronously via A2A by `agent_source_lint`, `agent_source_publish`, and `agent_source_compile`. See docs/developer/chat-agent-authoring-review.md.",
+  "type": "module",
+  "cinatra": {
+    "apiVersion": "cinatra.ai/v1",
+    "kind": "agent",
+    "dependencies": []
+  }
+}
