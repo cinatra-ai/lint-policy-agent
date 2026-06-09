@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output (tsc outDir — see tsconfig.json)
+dist/
+
+# Lockfiles — extracted extension repos ship none; CI installs with
+# --no-frozen-lockfile (see .github/workflows/ci.yml)
+pnpm-lock.yaml
+package-lock.json
+
+# npm pack artifacts
+*.tgz
+
+# Logs
+*.log
+
+# Secrets — never commit
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
