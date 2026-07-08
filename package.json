@@ -10,7 +10,17 @@
   "cinatra": {
     "apiVersion": "cinatra.ai/v1",
     "kind": "agent",
+    "displayName": "Lint Policy Agent",
     "dependencies": [],
-    "consumes": []
+    "consumes": [],
+    "packageType": "agent",
+    "manifestVersion": 1,
+    "sourceTemplateId": "agent-lint-policy-flow",
+    "sourceVersionId": "3e80914e-e3f6-4184-99c4-a71b3f947e55",
+    "sourceVersionNumber": 1,
+    "riskLevel": "low",
+    "hasApprovalGates": false,
+    "toolAccess": [],
+    "ownerOrgId": null
   }
 }
